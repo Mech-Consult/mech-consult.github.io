@@ -1102,9 +1102,11 @@
         <p style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1.5rem;">Fill out the form and I’ll respond within one business day.</p>
         <div class="form-success" id="formSuccess">✓ Message sent successfully. I’ll be in touch shortly!</div>
         <form id="contactForm" data-recipient="formalstuff.mte@gmail.com" onsubmit="handleSubmit(event)">
+          <input type="hidden" name="access_key" value="8c61fd8e-7804-44d0-a30c-60d060b90b64">
+          <input type="hidden" name="from_name" value="MechConsult Website">
           <div class="form-row">
-            <div class="form-group"><label>Full Name *</label><input type="text" name="from_name" placeholder="John Smith" required=""></div>
-            <div class="form-group"><label>Email Address *</label><input type="email" name="from_email" placeholder="john@company.com" required=""></div>
+            <div class="form-group"><label>Full Name *</label><input type="text" name="name" placeholder="John Smith" required=""></div>
+            <div class="form-group"><label>Email Address *</label><input type="email" name="email" placeholder="john@company.com" required=""></div>
           </div>
           <div class="form-row">
             <div class="form-group"><label>Phone</label><input type="tel" name="phone" placeholder="+1 (555) 000-0000"></div>
@@ -1377,22 +1379,41 @@ document.querySelectorAll('.card').forEach(card => {
 function handleSubmit(e) {
   e.preventDefault();
   const form = e.target;
-  const name = form.querySelector('[name="from_name"]').value;
-  const email = form.querySelector('[name="from_email"]').value;
-  const phone = form.querySelector('[name="phone"]').value || 'Not provided';
-  const budget = form.querySelector('[name="budget"]').value || 'Not specified';
-  const subject = form.querySelector('[name="subject"]').value;
-  const message = form.querySelector('[name="message"]').value;
-
-  const recipient = form.getAttribute('data-recipient') || 'formalstuff.mte@gmail.com';
-  const body = `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nBudget: ${budget}\n\n${message}`;
-  const mailto = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.open(mailto, '_blank');
-
+  const btn = document.getElementById('submitBtn');
   const msg = document.getElementById('formSuccess');
-  msg.classList.add('show');
-  form.reset();
-  setTimeout(() => msg.classList.remove('show'), 5000);
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  const formData = new FormData(form);
+  fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      msg.textContent = '\u2713 Message sent successfully. I\'ll be in touch shortly!';
+      msg.style.background = 'rgba(52,211,153,0.1)';
+      msg.style.borderColor = 'rgba(52,211,153,0.3)';
+      msg.style.color = '#34d399';
+      msg.classList.add('show');
+      form.reset();
+    } else {
+      throw new Error(data.message);
+    }
+  })
+  .catch(() => {
+    msg.textContent = '\u2715 Failed to send. Please email us directly instead.';
+    msg.style.background = 'rgba(248,113,113,0.1)';
+    msg.style.borderColor = 'rgba(248,113,113,0.3)';
+    msg.style.color = '#f87171';
+    msg.classList.add('show');
+  })
+  .finally(() => {
+    btn.disabled = false;
+    btn.textContent = 'Send Message \u2192';
+    setTimeout(() => msg.classList.remove('show'), 6000);
+  });
 }
 
 // ===== TILT EFFECT ON PROJECT CARDS =====
