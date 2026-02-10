@@ -1039,6 +1039,10 @@ async function saveContactContent() {
       if (a.textContent.includes('@')) a.textContent = email;
     });
 
+    // Update contact form recipient
+    const contactForm = doc.getElementById('contactForm');
+    if (contactForm) contactForm.setAttribute('data-recipient', email);
+
     // Update all tel: links with new phone
     const phoneDigits = phone.replace(/[^+\d]/g, '');
     doc.querySelectorAll('a[href^="tel:"]').forEach(a => {
