@@ -943,10 +943,10 @@ function populateFormsFromHTML() {
   document.getElementById('aboutStats').value = statsText.trim();
 
   // Contact
-  const contactCards = doc.querySelectorAll('.contact-card');
+  const contactCards = doc.querySelectorAll('.contact-info-card');
   contactCards.forEach(card => {
-    const label = card.querySelector('.contact-card-label');
-    const value = card.querySelector('.contact-card-value');
+    const label = card.querySelector('h4');
+    const value = card.querySelector('p');
     if (label && value) {
       const l = label.textContent.trim().toLowerCase();
       if (l.includes('email')) document.getElementById('contactEmail').value = value.textContent.trim();
@@ -1014,17 +1014,36 @@ async function saveAboutContent() {
 
 async function saveContactContent() {
   await updateHTMLAndPush(doc => {
-    const contactCards = doc.querySelectorAll('.contact-card');
+    const email = document.getElementById('contactEmail').value;
+    const phone = document.getElementById('contactPhone').value;
+    const location = document.getElementById('contactLocation').value;
+    const response = document.getElementById('contactResponse').value;
+
+    // Update contact info cards
+    const contactCards = doc.querySelectorAll('.contact-info-card');
     contactCards.forEach(card => {
-      const label = card.querySelector('.contact-card-label');
-      const value = card.querySelector('.contact-card-value');
+      const label = card.querySelector('h4');
+      const value = card.querySelector('p');
       if (label && value) {
         const l = label.textContent.trim().toLowerCase();
-        if (l.includes('email')) value.textContent = document.getElementById('contactEmail').value;
-        if (l.includes('phone')) value.textContent = document.getElementById('contactPhone').value;
-        if (l.includes('location')) value.textContent = document.getElementById('contactLocation').value;
-        if (l.includes('response')) value.textContent = document.getElementById('contactResponse').value;
+        if (l.includes('email')) value.textContent = email;
+        if (l.includes('phone')) value.textContent = phone;
+        if (l.includes('location')) value.textContent = location;
+        if (l.includes('response')) value.textContent = response;
       }
+    });
+
+    // Update all mailto: links with new email
+    doc.querySelectorAll('a[href^="mailto:"]').forEach(a => {
+      a.setAttribute('href', 'mailto:' + email);
+      if (a.textContent.includes('@')) a.textContent = email;
+    });
+
+    // Update all tel: links with new phone
+    const phoneDigits = phone.replace(/[^+\d]/g, '');
+    doc.querySelectorAll('a[href^="tel:"]').forEach(a => {
+      a.setAttribute('href', 'tel:' + phoneDigits);
+      a.textContent = phone;
     });
   }, 'Update contact info');
 }
