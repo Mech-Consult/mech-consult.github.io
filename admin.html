@@ -804,7 +804,12 @@ async function getFile(path) {
   if (!res.ok) return null;
   const data = await res.json();
   CONFIG.sha[path] = data.sha;
-  return { content: atob(data.content.replace(/\n/g, '')), sha: data.sha };
+  // Properly decode UTF-8 from base64 (atob returns binary Latin-1, not UTF-8)
+  const binary = atob(data.content.replace(/\n/g, ''));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const decoded = new TextDecoder('utf-8').decode(bytes);
+  return { content: decoded, sha: data.sha };
 }
 
 async function putFile(path, content, message) {
