@@ -370,6 +370,68 @@
     /* ===== SMOOTH IMAGE REVEAL ===== */
     .image-reveal { clip-path: inset(0 100% 0 0); transition: clip-path 1s cubic-bezier(0.22, 1, 0.36, 1); }
     .image-reveal.visible { clip-path: inset(0 0% 0 0); }
+
+    /* ===== PROFILE PHOTO ===== */
+    .profile-photo-wrap { position: relative; width: 280px; height: 340px; border-radius: 24px; overflow: hidden; border: 2px solid var(--border); margin: 0 auto; }
+    .profile-photo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-photo-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--bg-card), var(--bg-card-hover)); color: var(--text-3); gap: 1rem; }
+    .profile-photo-placeholder svg { opacity: 0.3; }
+    .profile-photo-placeholder span { font-size: 0.75rem; font-family: var(--font-mono); }
+    .profile-photo-wrap::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-deep) 0%, transparent 40%); pointer-events: none; }
+    .profile-photo-glow { position: absolute; top: -20%; left: -20%; width: 140%; height: 140%; background: radial-gradient(circle, rgba(56,189,248,0.08), transparent 70%); pointer-events: none; z-index: -1; }
+
+    /* ===== PROJECT REAL IMAGES ===== */
+    .project-image-bg img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .project-image-bg video { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .project-image-bg { position: relative; }
+    .project-image-upload { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(56,189,248,0.06), rgba(129,140,248,0.06)); }
+
+    /* ===== VIDEO SHOWREEL ===== */
+    .showreel-section { padding: 6rem 0; }
+    .showreel-wrapper { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--border); aspect-ratio: 16/9; background: var(--bg-card); }
+    .showreel-wrapper video, .showreel-wrapper iframe { width: 100%; height: 100%; object-fit: cover; border: none; }
+    .showreel-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; cursor: pointer; transition: all 0.3s; }
+    .showreel-placeholder:hover { background: rgba(56,189,248,0.03); }
+    .showreel-play { width: 80px; height: 80px; border-radius: 50%; background: var(--gradient-1); display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 60px rgba(56,189,248,0.3); transition: all 0.4s; }
+    .showreel-placeholder:hover .showreel-play { transform: scale(1.1); box-shadow: 0 25px 70px rgba(56,189,248,0.4); }
+    .showreel-play svg { margin-left: 4px; }
+    .showreel-label { color: var(--text-2); font-size: 0.875rem; font-weight: 500; letter-spacing: 0.05em; }
+    .showreel-corner { position: absolute; width: 60px; height: 60px; border: 2px solid rgba(56,189,248,0.15); pointer-events: none; }
+    .showreel-corner-tl { top: 1rem; left: 1rem; border-right: none; border-bottom: none; border-radius: 8px 0 0 0; }
+    .showreel-corner-tr { top: 1rem; right: 1rem; border-left: none; border-bottom: none; border-radius: 0 8px 0 0; }
+    .showreel-corner-bl { bottom: 1rem; left: 1rem; border-right: none; border-top: none; border-radius: 0 0 0 8px; }
+    .showreel-corner-br { bottom: 1rem; right: 1rem; border-left: none; border-top: none; border-radius: 0 0 8px 0; }
+
+    /* ===== GALLERY ===== */
+    .gallery-section { padding: 6rem 0; position: relative; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .gallery-item { position: relative; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); aspect-ratio: 4/3; background: var(--bg-card); cursor: pointer; transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+    .gallery-item:hover { transform: translateY(-6px); border-color: var(--border-hover); box-shadow: 0 25px 50px rgba(0,0,0,0.3), var(--shadow-glow); }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
+    .gallery-item:hover img { transform: scale(1.05); }
+    .gallery-item video { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-item-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(5,10,20,0.8) 0%, transparent 60%); opacity: 0; transition: opacity 0.4s; display: flex; align-items: flex-end; padding: 1.25rem; }
+    .gallery-item:hover .gallery-item-overlay { opacity: 1; }
+    .gallery-item-overlay span { color: var(--text-primary); font-size: 0.875rem; font-weight: 500; }
+    .gallery-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; color: var(--text-3); }
+    .gallery-placeholder svg { opacity: 0.2; }
+    .gallery-placeholder span { font-size: 0.6875rem; font-family: var(--font-mono); }
+    .gallery-item.tall { grid-row: span 2; aspect-ratio: auto; }
+    .gallery-item.wide { grid-column: span 2; }
+    @media (max-width: 768px) { .gallery-grid { grid-template-columns: 1fr 1fr; } .gallery-item.wide { grid-column: span 1; } .gallery-item.tall { grid-row: span 1; aspect-ratio: 4/3; } }
+    @media (max-width: 480px) { .gallery-grid { grid-template-columns: 1fr; } }
+
+    /* ===== LIGHTBOX ===== */
+    .lightbox { position: fixed; inset: 0; z-index: 10000; background: rgba(5,10,20,0.95); display: none; align-items: center; justify-content: center; padding: 2rem; backdrop-filter: blur(20px); }
+    .lightbox.open { display: flex; }
+    .lightbox-content { max-width: 90vw; max-height: 85vh; border-radius: 16px; overflow: hidden; }
+    .lightbox-content img, .lightbox-content video { max-width: 90vw; max-height: 85vh; object-fit: contain; display: block; }
+    .lightbox-close { position: absolute; top: 1.5rem; right: 1.5rem; width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+    .lightbox-close:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.3); }
+    .lightbox-nav { position: absolute; top: 50%; width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transform: translateY(-50%); transition: all 0.3s; }
+    .lightbox-nav:hover { background: rgba(56,189,248,0.2); border-color: rgba(56,189,248,0.3); }
+    .lightbox-prev { left: 1.5rem; }
+    .lightbox-next { right: 1.5rem; }
   </style>
 </head>
 <body>
@@ -407,7 +469,7 @@
       <a href="#about" class="nav-link">About</a>
       <a href="#services" class="nav-link">Services</a>
       <a href="#projects" class="nav-link">Portfolio</a>
-      <a href="#testimonials" class="nav-link">Testimonials</a>
+      <a href="#gallery" class="nav-link">Gallery</a>
       <a href="#contact" class="nav-link">Contact</a>
     </div>
     <a href="#contact" class="btn btn-primary nav-cta" style="padding:0.625rem 1.5rem; font-size:0.8125rem;">Book a Call</a>
@@ -424,7 +486,7 @@
   <a href="#about" onclick="this.parentElement.classList.remove('open')">About</a>
   <a href="#services" onclick="this.parentElement.classList.remove('open')">Services</a>
   <a href="#projects" onclick="this.parentElement.classList.remove('open')">Portfolio</a>
-  <a href="#testimonials" onclick="this.parentElement.classList.remove('open')">Testimonials</a>
+  <a href="#gallery" onclick="this.parentElement.classList.remove('open')">Gallery</a>
   <a href="#contact" onclick="this.parentElement.classList.remove('open')">Contact</a>
 </div>
 
@@ -554,6 +616,18 @@
         </div>
       </div>
       <div class="about-side">
+        <!-- Profile Photo -->
+        <div class="reveal" style="margin-bottom:1.5rem;">
+          <div class="profile-photo-wrap">
+            <div class="profile-photo-glow"></div>
+            <!-- Replace the placeholder below with your photo: -->
+            <!-- <img src="https://mech-consult.github.io/media/profile.jpg" alt="Profile Photo"> -->
+            <div class="profile-photo-placeholder" id="profilePhotoSlot">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Upload your photo via Admin Panel</span>
+            </div>
+          </div>
+        </div>
         <div class="card reveal reveal-delay-1">
           <h3 class="heading-sm" style="margin-bottom:1.5rem; color:var(--accent);">Technical Proficiency</h3>
           <div>
@@ -859,6 +933,84 @@
     </div>
   </div>
 </section>
+
+<!-- VIDEO SHOWREEL -->
+<section class="showreel-section" id="showreel">
+  <div class="container">
+    <div class="reveal" style="text-align:center; margin-bottom:3rem;">
+      <div class="section-label" style="justify-content:center;"><div class="dot"></div><span>Showreel</span></div>
+      <h2 class="heading-lg">See our work <span class="text-gradient">in action.</span></h2>
+      <div class="section-line section-line-center"></div>
+    </div>
+    <div class="showreel-wrapper reveal">
+      <div class="showreel-corner showreel-corner-tl"></div>
+      <div class="showreel-corner showreel-corner-tr"></div>
+      <div class="showreel-corner showreel-corner-bl"></div>
+      <div class="showreel-corner showreel-corner-br"></div>
+      <!-- Replace the placeholder below with your video or YouTube embed: -->
+      <!-- Option A: Self-hosted video -->
+      <!-- <video src="https://mech-consult.github.io/media/showreel.mp4" controls poster="https://mech-consult.github.io/media/showreel-poster.jpg"></video> -->
+      <!-- Option B: YouTube embed -->
+      <!-- <iframe src="https://www.youtube.com/embed/YOUR_VIDEO_ID" allowfullscreen></iframe> -->
+      <div class="showreel-placeholder" id="showreelSlot" onclick="document.getElementById('showreelSlot').innerHTML='<div style=color:var(--text-3);font-size:0.875rem;text-align:center;padding:2rem>Upload a video via Admin Panel → Media Library,<br>then edit this section to embed it.</div>'">
+        <div class="showreel-play">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="#0a1628"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div class="showreel-label">Play Showreel</div>
+        <div style="font-size:0.75rem; color:var(--text-3); font-family:var(--font-mono); margin-top:0.5rem;">Upload video via Admin Panel → Media Library</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="gallery-section" id="gallery">
+  <div class="container">
+    <div class="reveal" style="text-align:center; margin-bottom:3rem;">
+      <div class="section-label" style="justify-content:center;"><div class="dot"></div><span>Gallery</span></div>
+      <h2 class="heading-lg">Project <span class="text-gradient">gallery.</span></h2>
+      <p style="color:var(--text-secondary); margin-top:1rem; max-width:600px; margin-left:auto; margin-right:auto;">A visual showcase of our engineering work — from prototypes to deployed systems.</p>
+      <div class="section-line section-line-center"></div>
+    </div>
+    <div class="gallery-grid stagger-children" id="galleryGrid">
+      <!-- Gallery items — replace placeholders with your images/videos -->
+      <!-- Upload images via Admin → Media Library, then use URLs like: https://mech-consult.github.io/media/photo1.jpg -->
+      <div class="gallery-item wide reveal" onclick="openLightbox(0)">
+        <!-- <img src="https://mech-consult.github.io/media/gallery-1.jpg" alt="Project Photo"> -->
+        <div class="gallery-placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Upload: gallery-1.jpg</span></div>
+        <div class="gallery-item-overlay"><span>Robotic Arm Assembly</span></div>
+      </div>
+      <div class="gallery-item reveal" onclick="openLightbox(1)">
+        <div class="gallery-placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Upload: gallery-2.jpg</span></div>
+        <div class="gallery-item-overlay"><span>PCB Design</span></div>
+      </div>
+      <div class="gallery-item tall reveal" onclick="openLightbox(2)">
+        <div class="gallery-placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Upload: gallery-3.jpg</span></div>
+        <div class="gallery-item-overlay"><span>IoT Sensor Network</span></div>
+      </div>
+      <div class="gallery-item reveal" onclick="openLightbox(3)">
+        <div class="gallery-placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Upload: gallery-4.jpg</span></div>
+        <div class="gallery-item-overlay"><span>Automation Line</span></div>
+      </div>
+      <div class="gallery-item reveal" onclick="openLightbox(4)">
+        <div class="gallery-placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Upload: gallery-5.jpg</span></div>
+        <div class="gallery-item-overlay"><span>Drone Prototype</span></div>
+      </div>
+      <div class="gallery-item wide reveal" onclick="openLightbox(5)">
+        <div class="gallery-placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Upload: demo-video.mp4</span></div>
+        <div class="gallery-item-overlay"><span>Project Demo Video</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="if(event.target===this)closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <button class="lightbox-nav lightbox-prev" onclick="navLightbox(-1)">&#8249;</button>
+  <button class="lightbox-nav lightbox-next" onclick="navLightbox(1)">&#8250;</button>
+  <div class="lightbox-content" id="lightboxContent"></div>
+</div>
 
 <!-- TESTIMONIALS -->
 <section class="testimonials-section" id="testimonials">
@@ -1364,6 +1516,60 @@ if (heroScroll) {
     heroScroll.style.transform = `translateX(-50%) translateY(${window.scrollY * 0.3}px)`;
   });
 }
+
+// ===== LIGHTBOX =====
+let lightboxIndex = 0;
+const galleryItems = [];
+
+function initGallery() {
+  document.querySelectorAll('.gallery-item').forEach((item, i) => {
+    const img = item.querySelector('img');
+    const video = item.querySelector('video');
+    if (img) galleryItems[i] = { type: 'image', src: img.src, alt: img.alt };
+    else if (video) galleryItems[i] = { type: 'video', src: video.src };
+    else galleryItems[i] = null;
+  });
+}
+
+function openLightbox(idx) {
+  initGallery();
+  if (!galleryItems[idx]) return;
+  lightboxIndex = idx;
+  showLightboxContent();
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+  document.getElementById('lightboxContent').innerHTML = '';
+}
+
+function navLightbox(dir) {
+  let newIdx = lightboxIndex + dir;
+  while (newIdx >= 0 && newIdx < galleryItems.length && !galleryItems[newIdx]) newIdx += dir;
+  if (newIdx >= 0 && newIdx < galleryItems.length && galleryItems[newIdx]) {
+    lightboxIndex = newIdx;
+    showLightboxContent();
+  }
+}
+
+function showLightboxContent() {
+  const item = galleryItems[lightboxIndex];
+  if (!item) return;
+  const container = document.getElementById('lightboxContent');
+  if (item.type === 'image') container.innerHTML = `<img src="${item.src}" alt="${item.alt || ''}">`;
+  else container.innerHTML = `<video src="${item.src}" controls autoplay></video>`;
+}
+
+// Keyboard nav for lightbox
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') navLightbox(-1);
+  if (e.key === 'ArrowRight') navLightbox(1);
+});
 </script>
 
 </body>
