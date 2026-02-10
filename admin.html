@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MechConsult Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e17; --bg-2: #111827; --bg-3: #1f2937; --bg-4: #374151;
+      --accent: #38bdf8; --accent-2: #818cf8; --accent-3: #34d399; --danger: #ef4444; --warning: #f59e0b; --success: #22c55e;
+      --text: #f1f5f9; --text-2: #94a3b8; --text-3: #64748b;
+      --border: rgba(255,255,255,0.08); --radius: 12px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    ::selection { background:rgba(56,189,248,0.3); }
+    ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--bg); } ::-webkit-scrollbar-thumb { background:var(--bg-3); border-radius:3px; }
+
+    /* LOGIN */
+    .login-screen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:1000; }
+    .login-screen.hidden { display:none; }
+    .login-box { background:var(--bg-2); border:1px solid var(--border); border-radius:20px; padding:3rem; width:420px; max-width:90vw; text-align:center; }
+    .login-box h1 { font-size:1.5rem; margin-bottom:0.5rem; }
+    .login-box p { color:var(--text-2); font-size:0.875rem; margin-bottom:2rem; }
+    .login-box input { width:100%; padding:0.875rem 1rem; background:var(--bg-3); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:0.9rem; font-family:'JetBrains Mono',monospace; margin-bottom:1rem; outline:none; transition:border 0.3s; }
+    .login-box input:focus { border-color:var(--accent); }
+    .login-box .login-btn { width:100%; padding:0.875rem; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#0a1628; border:none; border-radius:var(--radius); font-weight:600; font-size:0.9375rem; cursor:pointer; transition:all 0.3s; }
+    .login-box .login-btn:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(56,189,248,0.3); }
+    .login-box .login-help { margin-top:1.5rem; font-size:0.75rem; color:var(--text-3); line-height:1.6; }
+    .login-box .login-help a { color:var(--accent); text-decoration:none; }
+
+    /* LAYOUT */
+    .app { display:flex; min-height:100vh; }
+    .sidebar { width:260px; background:var(--bg-2); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; top:0; bottom:0; z-index:50; transition:transform 0.3s; }
+    .main { flex:1; margin-left:260px; min-height:100vh; }
+    @media(max-width:768px) { .sidebar { transform:translateX(-100%); } .sidebar.open { transform:translateX(0); } .main { margin-left:0; } }
+
+    /* SIDEBAR */
+    .sidebar-header { padding:1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.75rem; }
+    .sidebar-header .logo-dot { width:36px; height:36px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#0a1628; font-size:0.875rem; }
+    .sidebar-header span { font-weight:600; font-size:1rem; }
+    .sidebar-nav { flex:1; padding:1rem 0; overflow-y:auto; }
+    .nav-section { padding:0 1rem; margin-bottom:0.5rem; }
+    .nav-section-title { font-size:0.6875rem; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-3); padding:0.5rem 0.75rem; }
+    .nav-item { display:flex; align-items:center; gap:0.75rem; padding:0.625rem 0.75rem; border-radius:8px; color:var(--text-2); font-size:0.875rem; font-weight:500; cursor:pointer; transition:all 0.2s; text-decoration:none; margin:2px 0; }
+    .nav-item:hover { background:var(--bg-3); color:var(--text); }
+    .nav-item.active { background:rgba(56,189,248,0.1); color:var(--accent); }
+    .nav-item svg { width:18px; height:18px; flex-shrink:0; }
+    .sidebar-footer { padding:1rem 1.5rem; border-top:1px solid var(--border); }
+    .sidebar-footer a { color:var(--text-3); font-size:0.8125rem; text-decoration:none; display:flex; align-items:center; gap:0.5rem; }
+    .sidebar-footer a:hover { color:var(--danger); }
+
+    /* TOPBAR */
+    .topbar { height:64px; background:var(--bg-2); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 2rem; position:sticky; top:0; z-index:40; backdrop-filter:blur(20px); }
+    .topbar h2 { font-size:1.125rem; font-weight:600; }
+    .topbar-actions { display:flex; align-items:center; gap:1rem; }
+    .mobile-menu-btn { display:none; background:none; border:none; color:var(--text); cursor:pointer; }
+    @media(max-width:768px) { .mobile-menu-btn { display:block; } .topbar { padding:0 1rem; } }
+
+    /* CONTENT */
+    .content { padding:2rem; max-width:1200px; }
+    @media(max-width:768px) { .content { padding:1rem; } }
+
+    /* CARDS */
+    .stat-card { background:var(--bg-2); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; }
+    .stat-card .stat-value { font-size:2rem; font-weight:700; background:linear-gradient(135deg,var(--accent),var(--accent-2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .stat-card .stat-label { color:var(--text-2); font-size:0.8125rem; margin-top:0.25rem; }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:2rem; }
+
+    /* PANEL */
+    .panel { background:var(--bg-2); border:1px solid var(--border); border-radius:16px; margin-bottom:1.5rem; overflow:hidden; }
+    .panel-header { padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .panel-header h3 { font-size:1rem; font-weight:600; }
+    .panel-body { padding:1.5rem; }
+
+    /* FORM */
+    .form-group { margin-bottom:1.25rem; }
+    .form-label { display:block; font-size:0.8125rem; font-weight:500; color:var(--text-2); margin-bottom:0.5rem; }
+    .form-input, .form-textarea, .form-select { width:100%; padding:0.75rem 1rem; background:var(--bg-3); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:0.875rem; font-family:inherit; outline:none; transition:border 0.3s; }
+    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color:var(--accent); }
+    .form-textarea { resize:vertical; min-height:100px; line-height:1.6; }
+    .form-select { cursor:pointer; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    @media(max-width:600px) { .form-row { grid-template-columns:1fr; } }
+    .form-hint { font-size:0.75rem; color:var(--text-3); margin-top:0.25rem; }
+
+    /* BUTTONS */
+    .btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.625rem 1.25rem; border-radius:8px; font-size:0.8125rem; font-weight:600; border:none; cursor:pointer; transition:all 0.3s; font-family:inherit; text-decoration:none; }
+    .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#0a1628; }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 8px 25px rgba(56,189,248,0.25); }
+    .btn-success { background:var(--success); color:#fff; }
+    .btn-danger { background:rgba(239,68,68,0.15); color:var(--danger); border:1px solid rgba(239,68,68,0.2); }
+    .btn-danger:hover { background:var(--danger); color:#fff; }
+    .btn-outline { background:transparent; color:var(--text); border:1px solid var(--border); }
+    .btn-outline:hover { border-color:var(--accent); color:var(--accent); }
+    .btn-sm { padding:0.375rem 0.75rem; font-size:0.75rem; }
+    .btn-icon { width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; }
+
+    /* TABLE */
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; padding:0.75rem 1rem; font-size:0.75rem; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid var(--border); }
+    td { padding:0.875rem 1rem; font-size:0.875rem; border-bottom:1px solid var(--border); }
+    tr:hover td { background:rgba(255,255,255,0.02); }
+
+    /* MEDIA GRID */
+    .media-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; }
+    .media-item { background:var(--bg-3); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:all 0.3s; position:relative; }
+    .media-item:hover { border-color:var(--accent); transform:translateY(-2px); }
+    .media-thumb { width:100%; aspect-ratio:1; object-fit:cover; display:block; background:var(--bg-4); }
+    .media-thumb-placeholder { width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; background:var(--bg-4); color:var(--text-3); font-size:2rem; }
+    .media-info { padding:0.75rem; }
+    .media-info .name { font-size:0.75rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .media-info .size { font-size:0.6875rem; color:var(--text-3); }
+    .media-delete { position:absolute; top:0.5rem; right:0.5rem; width:28px; height:28px; background:rgba(0,0,0,0.7); border:none; color:var(--danger); border-radius:6px; cursor:pointer; display:none; align-items:center; justify-content:center; font-size:1rem; }
+    .media-item:hover .media-delete { display:flex; }
+
+    /* UPLOAD ZONE */
+    .upload-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:3rem 2rem; text-align:center; cursor:pointer; transition:all 0.3s; }
+    .upload-zone:hover, .upload-zone.dragover { border-color:var(--accent); background:rgba(56,189,248,0.03); }
+    .upload-zone svg { margin-bottom:1rem; color:var(--text-3); }
+    .upload-zone p { color:var(--text-2); font-size:0.875rem; }
+    .upload-zone .upload-hint { color:var(--text-3); font-size:0.75rem; margin-top:0.5rem; }
+    .upload-zone input[type="file"] { display:none; }
+
+    /* TOAST */
+    .toast-container { position:fixed; top:1rem; right:1rem; z-index:9999; display:flex; flex-direction:column; gap:0.5rem; }
+    .toast { background:var(--bg-2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.5rem; display:flex; align-items:center; gap:0.75rem; font-size:0.875rem; animation:slideIn 0.3s ease; min-width:280px; box-shadow:0 20px 40px rgba(0,0,0,0.4); }
+    .toast.success { border-color:rgba(34,197,94,0.3); } .toast.success .toast-dot { background:var(--success); }
+    .toast.error { border-color:rgba(239,68,68,0.3); } .toast.error .toast-dot { background:var(--danger); }
+    .toast.info { border-color:rgba(56,189,248,0.3); } .toast.info .toast-dot { background:var(--accent); }
+    .toast-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    @keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+    /* EDITOR */
+    .editor-toolbar { display:flex; gap:0.25rem; padding:0.5rem; background:var(--bg-3); border-radius:8px 8px 0 0; border:1px solid var(--border); border-bottom:none; flex-wrap:wrap; }
+    .editor-toolbar button { background:none; border:none; color:var(--text-2); width:32px; height:32px; border-radius:4px; cursor:pointer; font-size:0.875rem; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+    .editor-toolbar button:hover { background:var(--bg-4); color:var(--text); }
+    .editor-content { min-height:200px; padding:1rem; background:var(--bg-3); border:1px solid var(--border); border-radius:0 0 8px 8px; color:var(--text); font-size:0.9rem; line-height:1.7; outline:none; }
+    .editor-content:focus { border-color:var(--accent); }
+
+    /* PAGES */
+    .page-view { display:none; }
+    .page-view.active { display:block; }
+
+    /* BADGE */
+    .badge { display:inline-flex; align-items:center; padding:0.25rem 0.625rem; border-radius:100px; font-size:0.6875rem; font-weight:600; }
+    .badge-success { background:rgba(34,197,94,0.1); color:var(--success); }
+    .badge-warning { background:rgba(245,158,11,0.1); color:var(--warning); }
+    .badge-info { background:rgba(56,189,248,0.1); color:var(--accent); }
+
+    /* SECTION EDITOR ITEM */
+    .section-item { background:var(--bg-3); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:0.75rem; overflow:hidden; }
+    .section-item-header { padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; cursor:pointer; transition:background 0.2s; }
+    .section-item-header:hover { background:rgba(255,255,255,0.02); }
+    .section-item-header h4 { font-size:0.875rem; font-weight:600; display:flex; align-items:center; gap:0.5rem; }
+    .section-item-body { padding:0 1.25rem 1.25rem; display:none; }
+    .section-item.open .section-item-body { display:block; }
+    .section-item .chevron { transition:transform 0.2s; color:var(--text-3); }
+    .section-item.open .chevron { transform:rotate(180deg); }
+
+    /* LOADING */
+    .spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.6s linear infinite; display:inline-block; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* PREVIEW IFRAME */
+    .preview-frame { width:100%; height:600px; border:1px solid var(--border); border-radius:var(--radius); background:#000; }
+
+    /* EMPTY STATE */
+    .empty-state { text-align:center; padding:3rem; color:var(--text-3); }
+    .empty-state svg { margin-bottom:1rem; opacity:0.3; }
+    .empty-state p { font-size:0.875rem; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-weight:700;color:#0a1628;font-size:1.25rem;">M</div>
+    <h1>Admin Panel</h1>
+    <p>Enter your GitHub Personal Access Token to manage your website.</p>
+    <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+    <input type="text" id="repoInput" placeholder="Mech-Consult/mech-consult.github.io" value="Mech-Consult/mech-consult.github.io">
+    <button class="login-btn" onclick="handleLogin()">Connect to GitHub</button>
+    <div class="login-help">
+      <a href="https://github.com/settings/tokens/new?scopes=repo&description=MechConsult+Admin" target="_blank">Create a token here</a> (select <strong>repo</strong> scope).<br>
+      Your token is stored locally and never sent anywhere except GitHub's API.
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- APP -->
+<div class="app" id="app" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-dot">M</div>
+      <span>MechConsult</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Overview</div>
+        <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Content</div>
+        <a class="nav-item" data-page="hero" onclick="showPage('hero',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Hero Section
+        </a>
+        <a class="nav-item" data-page="about" onclick="showPage('about',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          About
+        </a>
+        <a class="nav-item" data-page="services" onclick="showPage('services',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Services
+        </a>
+        <a class="nav-item" data-page="projects" onclick="showPage('projects',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          Projects
+        </a>
+        <a class="nav-item" data-page="testimonials" onclick="showPage('testimonials',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Testimonials
+        </a>
+        <a class="nav-item" data-page="contact" onclick="showPage('contact',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Contact Info
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Management</div>
+        <a class="nav-item" data-page="media" onclick="showPage('media',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Media Library
+        </a>
+        <a class="nav-item" data-page="pages" onclick="showPage('pages',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Pages
+        </a>
+        <a class="nav-item" data-page="settings" onclick="showPage('settings',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 010 4h-.09c-.66 0-1.25.4-1.51 1z"/></svg>
+          Settings
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
+        <h2 id="pageTitle">Dashboard</h2>
+      </div>
+      <div class="topbar-actions">
+        <a href="https://mech-consult.github.io" target="_blank" class="btn btn-outline btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+          View Site
+        </a>
+        <button class="btn btn-primary btn-sm" onclick="publishChanges()" id="publishBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+          Publish
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== DASHBOARD ==================== -->
+    <div class="page-view active" id="page-dashboard">
+      <div class="content">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-value" id="statPages">-</div><div class="stat-label">Pages</div></div>
+          <div class="stat-card"><div class="stat-value" id="statMedia">-</div><div class="stat-label">Media Files</div></div>
+          <div class="stat-card"><div class="stat-value" id="statCommits">-</div><div class="stat-label">Updates</div></div>
+          <div class="stat-card"><div class="stat-value"><span class="badge badge-success">Live</span></div><div class="stat-label">Site Status</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Quick Actions</h3></div>
+          <div class="panel-body" style="display:flex;gap:1rem;flex-wrap:wrap;">
+            <button class="btn btn-outline" onclick="showPage('hero',document.querySelector('[data-page=hero]'))">Edit Hero</button>
+            <button class="btn btn-outline" onclick="showPage('media',document.querySelector('[data-page=media]'))">Upload Media</button>
+            <button class="btn btn-outline" onclick="showPage('pages',document.querySelector('[data-page=pages]'))">Add Page</button>
+            <button class="btn btn-outline" onclick="showPage('services',document.querySelector('[data-page=services]'))">Edit Services</button>
+            <button class="btn btn-outline" onclick="showPage('projects',document.querySelector('[data-page=projects]'))">Edit Projects</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Recent Commits</h3></div>
+          <div class="panel-body" id="recentCommits"><div class="spinner"></div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>Live Preview</h3></div>
+          <div class="panel-body"><iframe src="https://mech-consult.github.io/" class="preview-frame" id="previewFrame"></iframe></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== HERO EDITOR ==================== -->
+    <div class="page-view" id="page-hero">
+      <div class="content">
+        <div class="panel">
+          <div class="panel-header"><h3>Hero Section</h3></div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label class="form-label">Badge Text</label>
+              <input class="form-input" id="heroBadge" value="Available for new projects">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Main Title (use &lt;br&gt; for line breaks)</label>
+              <input class="form-input" id="heroTitle" value="Precision<br>Mechatronics<br>Engineering">
+              <div class="form-hint">The middle line uses the shimmer animation effect.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Typed Words (comma-separated)</label>
+              <input class="form-input" id="heroTyped" value="Mechatronics, Robotics, Automation, IoT Systems, Innovation">
+              <div class="form-hint">These words rotate with a typing animation in the hero.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea class="form-textarea" id="heroDesc" rows="3">Transforming complex engineering challenges into elegant, high-performance solutions. Robotics, automation, IoT — delivered with precision.</textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Primary Button Text</label>
+                <input class="form-input" id="heroCTA1" value="View Services">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Secondary Button Text</label>
+                <input class="form-input" id="heroCTA2" value="See My Work">
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveHeroContent()">Save Hero Content</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ABOUT EDITOR ==================== -->
+    <div class="page-view" id="page-about">
+      <div class="content">
+        <div class="panel">
+          <div class="panel-header"><h3>About Section</h3></div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label class="form-label">Heading</label>
+              <input class="form-input" id="aboutHeading" value="Engineering excellence, delivered with precision.">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Paragraph 1</label>
+              <textarea class="form-textarea" id="aboutP1" rows="3">With over 15 years at the intersection of mechanical, electronic, and software engineering, I architect solutions that push the boundaries of what's technically possible.</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Paragraph 2</label>
+              <textarea class="form-textarea" id="aboutP2" rows="3">From autonomous robotics to industrial IoT platforms, every project is approached with rigorous methodology, clean design principles, and a relentless focus on measurable outcomes for clients.</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Stats (format: number|label, one per line)</label>
+              <textarea class="form-textarea" id="aboutStats" rows="5">15|Years Experience
+120|Projects Delivered
+60|Global Clients
+98|Success Rate</textarea>
+            </div>
+            <button class="btn btn-primary" onclick="saveAboutContent()">Save About Content</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SERVICES EDITOR ==================== -->
+    <div class="page-view" id="page-services">
+      <div class="content">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Services</h3>
+            <button class="btn btn-outline btn-sm" onclick="addServiceForm()">+ Add Service</button>
+          </div>
+          <div class="panel-body" id="servicesEditor">
+            <p style="color:var(--text-3); font-size:0.875rem;">Loading services...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PROJECTS EDITOR ==================== -->
+    <div class="page-view" id="page-projects">
+      <div class="content">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Projects / Portfolio</h3>
+            <button class="btn btn-outline btn-sm" onclick="addProjectForm()">+ Add Project</button>
+          </div>
+          <div class="panel-body" id="projectsEditor">
+            <p style="color:var(--text-3); font-size:0.875rem;">Loading projects...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TESTIMONIALS EDITOR ==================== -->
+    <div class="page-view" id="page-testimonials">
+      <div class="content">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Testimonials</h3>
+            <button class="btn btn-outline btn-sm" onclick="addTestimonialForm()">+ Add Testimonial</button>
+          </div>
+          <div class="panel-body" id="testimonialsEditor">
+            <p style="color:var(--text-3); font-size:0.875rem;">Loading testimonials...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CONTACT EDITOR ==================== -->
+    <div class="page-view" id="page-contact">
+      <div class="content">
+        <div class="panel">
+          <div class="panel-header"><h3>Contact Information</h3></div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input class="form-input" id="contactEmail" value="hello@mechconsult.io">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input class="form-input" id="contactPhone" value="+1 (555) 000-0000">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Location</label>
+                <input class="form-input" id="contactLocation" value="San Francisco, CA">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Response Time</label>
+                <input class="form-input" id="contactResponse" value="Under 24hrs">
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveContactContent()">Save Contact Info</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MEDIA LIBRARY ==================== -->
+    <div class="page-view" id="page-media">
+      <div class="content">
+        <div class="panel">
+          <div class="panel-header"><h3>Upload Media</h3></div>
+          <div class="panel-body">
+            <div class="upload-zone" id="uploadZone">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              <p>Drag & drop files here or <strong style="color:var(--accent);">click to browse</strong></p>
+              <div class="upload-hint">Supports images (JPG, PNG, GIF, SVG, WebP) and videos (MP4, WebM). Max 25MB per file.</div>
+              <input type="file" id="fileInput" multiple accept="image/*,video/*,.svg">
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Media Files</h3>
+            <button class="btn btn-outline btn-sm" onclick="loadMedia()">Refresh</button>
+          </div>
+          <div class="panel-body">
+            <div class="media-grid" id="mediaGrid">
+              <div class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <p>No media files yet</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PAGES MANAGER ==================== -->
+    <div class="page-view" id="page-pages">
+      <div class="content">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Website Pages</h3>
+            <button class="btn btn-primary btn-sm" onclick="showNewPageModal()">+ New Page</button>
+          </div>
+          <div class="panel-body">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Page</th><th>Path</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="pagesTable"><tr><td colspan="4"><div class="spinner"></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- New Page Form -->
+        <div class="panel" id="newPagePanel" style="display:none;">
+          <div class="panel-header"><h3>Create New Page</h3></div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Page Title</label>
+                <input class="form-input" id="newPageTitle" placeholder="e.g. My New Page">
+              </div>
+              <div class="form-group">
+                <label class="form-label">File Name</label>
+                <input class="form-input" id="newPageSlug" placeholder="e.g. my-page.html">
+                <div class="form-hint">URL: mech-consult.github.io/my-page.html</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Page Content (HTML)</label>
+              <textarea class="form-textarea" id="newPageContent" rows="12" style="font-family:'JetBrains Mono',monospace; font-size:0.8125rem;"></textarea>
+            </div>
+            <div style="display:flex;gap:0.75rem;">
+              <button class="btn btn-primary" onclick="createNewPage()">Create Page</button>
+              <button class="btn btn-outline" onclick="document.getElementById('newPagePanel').style.display='none'">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SETTINGS ==================== -->
+    <div class="page-view" id="page-settings">
+      <div class="content">
+        <div class="panel">
+          <div class="panel-header"><h3>Site Settings</h3></div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label class="form-label">Site Title</label>
+              <input class="form-input" id="siteTitle" value="MechConsult — Premium Mechatronics Engineering">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Brand Name</label>
+                <input class="form-input" id="brandName" value="MechConsult">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Accent Color</label>
+                <input class="form-input" id="accentColor" value="#38bdf8" type="color" style="height:42px;padding:4px;">
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Social Links</h3></div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">GitHub</label><input class="form-input" id="socialGithub" placeholder="https://github.com/..."></div>
+              <div class="form-group"><label class="form-label">LinkedIn</label><input class="form-input" id="socialLinkedin" placeholder="https://linkedin.com/in/..."></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Twitter / X</label><input class="form-input" id="socialTwitter" placeholder="https://x.com/..."></div>
+              <div class="form-group"><label class="form-label">YouTube</label><input class="form-input" id="socialYoutube" placeholder="https://youtube.com/@..."></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveSocialLinks()">Save Social Links</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Danger Zone</h3></div>
+          <div class="panel-body">
+            <button class="btn btn-danger" onclick="if(confirm('Clear all locally saved data?')){localStorage.clear();location.reload();}">Clear Local Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ==================== CONFIG ====================
+let CONFIG = { token: '', repo: '', sha: {}, htmlContent: '' };
+const API = 'https://api.github.com';
+
+// ==================== AUTH ====================
+function handleLogin() {
+  const token = document.getElementById('tokenInput').value.trim();
+  const repo = document.getElementById('repoInput').value.trim();
+  if (!token || !repo) { toast('Please enter both token and repo', 'error'); return; }
+  CONFIG.token = token;
+  CONFIG.repo = repo;
+  localStorage.setItem('mc_token', token);
+  localStorage.setItem('mc_repo', repo);
+  ghFetch(`/repos/${repo}`).then(r => {
+    if (r.ok) {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('app').style.display = 'flex';
+      loadDashboard();
+      toast('Connected to GitHub!', 'success');
+    } else { toast('Invalid token or repo. Check credentials.', 'error'); }
+  }).catch(() => toast('Connection failed.', 'error'));
+}
+
+function logout() {
+  localStorage.removeItem('mc_token');
+  localStorage.removeItem('mc_repo');
+  location.reload();
+}
+
+// Auto-login
+(function() {
+  const t = localStorage.getItem('mc_token');
+  const r = localStorage.getItem('mc_repo');
+  if (t && r) {
+    document.getElementById('tokenInput').value = t;
+    document.getElementById('repoInput').value = r;
+    handleLogin();
+  }
+})();
+
+// ==================== API HELPERS ====================
+function ghFetch(path, opts = {}) {
+  return fetch(`${API}${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': `token ${CONFIG.token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      ...opts.headers
+    }
+  });
+}
+
+async function getFile(path) {
+  const res = await ghFetch(`/repos/${CONFIG.repo}/contents/${path}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  CONFIG.sha[path] = data.sha;
+  return { content: atob(data.content.replace(/\n/g, '')), sha: data.sha };
+}
+
+async function putFile(path, content, message) {
+  const body = {
+    message: message || `Update ${path}`,
+    content: btoa(unescape(encodeURIComponent(content))),
+  };
+  if (CONFIG.sha[path]) body.sha = CONFIG.sha[path];
+  const res = await ghFetch(`/repos/${CONFIG.repo}/contents/${path}`, {
+    method: 'PUT',
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (res.ok) CONFIG.sha[path] = data.content.sha;
+  return res.ok;
+}
+
+async function deleteFile(path) {
+  if (!CONFIG.sha[path]) {
+    const f = await getFile(path);
+    if (!f) return false;
+  }
+  const res = await ghFetch(`/repos/${CONFIG.repo}/contents/${path}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ message: `Delete ${path}`, sha: CONFIG.sha[path] })
+  });
+  return res.ok;
+}
+
+// ==================== TOAST ====================
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-dot"></div>${msg}`;
+  container.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+// ==================== NAV ====================
+function showPage(page, el) {
+  document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = { dashboard:'Dashboard', hero:'Hero Section', about:'About', services:'Services', projects:'Projects', testimonials:'Testimonials', contact:'Contact Info', media:'Media Library', pages:'Pages', settings:'Settings' };
+  document.getElementById('pageTitle').textContent = titles[page] || page;
+  document.getElementById('sidebar').classList.remove('open');
+
+  // Load data for specific pages
+  if (page === 'media') loadMedia();
+  if (page === 'pages') loadPages();
+  if (page === 'services') loadServicesEditor();
+  if (page === 'projects') loadProjectsEditor();
+  if (page === 'testimonials') loadTestimonialsEditor();
+}
+
+// ==================== DASHBOARD ====================
+async function loadDashboard() {
+  // Load main HTML
+  const file = await getFile('index.html');
+  if (file) CONFIG.htmlContent = file.content;
+
+  // Count pages
+  try {
+    const res = await ghFetch(`/repos/${CONFIG.repo}/contents/`);
+    const files = await res.json();
+    const htmlFiles = files.filter(f => f.name.endsWith('.html'));
+    document.getElementById('statPages').textContent = htmlFiles.length;
+  } catch(e) { document.getElementById('statPages').textContent = '?'; }
+
+  // Count media
+  try {
+    const res = await ghFetch(`/repos/${CONFIG.repo}/contents/media`);
+    if (res.ok) {
+      const files = await res.json();
+      document.getElementById('statMedia').textContent = files.length;
+    } else { document.getElementById('statMedia').textContent = '0'; }
+  } catch(e) { document.getElementById('statMedia').textContent = '0'; }
+
+  // Recent commits
+  try {
+    const res = await ghFetch(`/repos/${CONFIG.repo}/commits?per_page=5`);
+    const commits = await res.json();
+    document.getElementById('statCommits').textContent = commits.length > 0 ? (await ghFetch(`/repos/${CONFIG.repo}/commits?per_page=1`).then(r => r.headers.get('Link')?.match(/page=(\d+)>; rel="last"/)?.[1]) || commits.length) : '0';
+    let html = '';
+    commits.forEach(c => {
+      const date = new Date(c.commit.author.date).toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--border);">
+        <div><div style="font-size:0.875rem;font-weight:500;">${c.commit.message}</div><div style="font-size:0.75rem;color:var(--text-3);">${date}</div></div>
+        <span class="badge badge-success">${c.sha.slice(0,7)}</span>
+      </div>`;
+    });
+    document.getElementById('recentCommits').innerHTML = html || '<p style="color:var(--text-3)">No commits yet</p>';
+  } catch(e) { document.getElementById('recentCommits').innerHTML = '<p style="color:var(--text-3)">Could not load commits</p>'; }
+
+  // Populate form fields from HTML
+  populateFormsFromHTML();
+}
+
+// ==================== PARSE HTML ====================
+function populateFormsFromHTML() {
+  if (!CONFIG.htmlContent) return;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(CONFIG.htmlContent, 'text/html');
+
+  // Hero
+  const badge = doc.querySelector('.hero-badge span');
+  if (badge) document.getElementById('heroBadge').value = badge.textContent.trim();
+  const heroTitle = doc.querySelector('.hero-title');
+  if (heroTitle) document.getElementById('heroTitle').value = heroTitle.innerHTML.replace(/\n\s*/g, '').trim();
+  const heroDesc = doc.querySelector('.hero-desc');
+  if (heroDesc) document.getElementById('heroDesc').value = heroDesc.textContent.trim();
+
+  // About
+  const aboutH2 = doc.querySelector('#about .heading-lg');
+  if (aboutH2) document.getElementById('aboutHeading').value = aboutH2.textContent.trim();
+  const aboutPs = doc.querySelectorAll('.about-text p');
+  if (aboutPs[0]) document.getElementById('aboutP1').value = aboutPs[0].textContent.trim();
+  if (aboutPs[1]) document.getElementById('aboutP2').value = aboutPs[1].textContent.trim();
+
+  // Stats
+  const stats = doc.querySelectorAll('.stat-card');
+  let statsText = '';
+  stats.forEach(s => {
+    const num = s.querySelector('[data-count]');
+    const label = s.querySelector('.stat-label');
+    if (num && label) statsText += `${num.getAttribute('data-count')}|${label.textContent.trim()}\n`;
+  });
+  document.getElementById('aboutStats').value = statsText.trim();
+
+  // Contact
+  const contactCards = doc.querySelectorAll('.contact-card');
+  contactCards.forEach(card => {
+    const label = card.querySelector('.contact-card-label');
+    const value = card.querySelector('.contact-card-value');
+    if (label && value) {
+      const l = label.textContent.trim().toLowerCase();
+      if (l.includes('email')) document.getElementById('contactEmail').value = value.textContent.trim();
+      if (l.includes('phone')) document.getElementById('contactPhone').value = value.textContent.trim();
+      if (l.includes('location')) document.getElementById('contactLocation').value = value.textContent.trim();
+      if (l.includes('response')) document.getElementById('contactResponse').value = value.textContent.trim();
+    }
+  });
+
+  // Settings
+  const title = doc.querySelector('title');
+  if (title) document.getElementById('siteTitle').value = title.textContent.trim();
+}
+
+// ==================== SAVE HELPERS ====================
+async function updateHTMLAndPush(modifyFn, commitMsg) {
+  if (!CONFIG.htmlContent) { toast('HTML not loaded. Try refreshing.', 'error'); return false; }
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(CONFIG.htmlContent, 'text/html');
+  modifyFn(doc);
+  const newHTML = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+  const ok = await putFile('index.html', newHTML, commitMsg);
+  if (ok) {
+    CONFIG.htmlContent = newHTML;
+    toast('Saved & published!', 'success');
+    document.getElementById('previewFrame').src = document.getElementById('previewFrame').src;
+  } else {
+    toast('Failed to save. Check permissions.', 'error');
+  }
+  return ok;
+}
+
+// ==================== SAVE FUNCTIONS ====================
+async function saveHeroContent() {
+  await updateHTMLAndPush(doc => {
+    const badge = doc.querySelector('.hero-badge span');
+    if (badge) badge.textContent = document.getElementById('heroBadge').value;
+    const title = doc.querySelector('.hero-title');
+    if (title) title.innerHTML = '\n        ' + document.getElementById('heroTitle').value + '\n      ';
+    const desc = doc.querySelector('.hero-desc');
+    if (desc) desc.textContent = document.getElementById('heroDesc').value;
+  }, 'Update hero section');
+}
+
+async function saveAboutContent() {
+  await updateHTMLAndPush(doc => {
+    const aboutPs = doc.querySelectorAll('.about-text p');
+    if (aboutPs[0]) aboutPs[0].textContent = document.getElementById('aboutP1').value;
+    if (aboutPs[1]) aboutPs[1].textContent = document.getElementById('aboutP2').value;
+
+    // Stats
+    const statsLines = document.getElementById('aboutStats').value.trim().split('\n');
+    const statCards = doc.querySelectorAll('.stat-card');
+    statsLines.forEach((line, i) => {
+      const [num, label] = line.split('|');
+      if (statCards[i]) {
+        const numEl = statCards[i].querySelector('[data-count]');
+        const lblEl = statCards[i].querySelector('.stat-label');
+        if (numEl) { numEl.setAttribute('data-count', num.trim()); numEl.textContent = '0'; }
+        if (lblEl) lblEl.textContent = label.trim();
+      }
+    });
+  }, 'Update about section');
+}
+
+async function saveContactContent() {
+  await updateHTMLAndPush(doc => {
+    const contactCards = doc.querySelectorAll('.contact-card');
+    contactCards.forEach(card => {
+      const label = card.querySelector('.contact-card-label');
+      const value = card.querySelector('.contact-card-value');
+      if (label && value) {
+        const l = label.textContent.trim().toLowerCase();
+        if (l.includes('email')) value.textContent = document.getElementById('contactEmail').value;
+        if (l.includes('phone')) value.textContent = document.getElementById('contactPhone').value;
+        if (l.includes('location')) value.textContent = document.getElementById('contactLocation').value;
+        if (l.includes('response')) value.textContent = document.getElementById('contactResponse').value;
+      }
+    });
+  }, 'Update contact info');
+}
+
+async function saveSettings() {
+  await updateHTMLAndPush(doc => {
+    const title = doc.querySelector('title');
+    if (title) title.textContent = document.getElementById('siteTitle').value;
+  }, 'Update site settings');
+}
+
+async function saveSocialLinks() {
+  toast('Social links saved locally.', 'success');
+  // Store in localStorage for now
+  localStorage.setItem('mc_social', JSON.stringify({
+    github: document.getElementById('socialGithub').value,
+    linkedin: document.getElementById('socialLinkedin').value,
+    twitter: document.getElementById('socialTwitter').value,
+    youtube: document.getElementById('socialYoutube').value,
+  }));
+}
+
+// ==================== SERVICES EDITOR ====================
+function loadServicesEditor() {
+  if (!CONFIG.htmlContent) return;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(CONFIG.htmlContent, 'text/html');
+  const cards = doc.querySelectorAll('.service-card');
+  let html = '';
+  cards.forEach((card, i) => {
+    const title = card.querySelector('.heading-sm')?.textContent || '';
+    const desc = card.querySelector('p')?.textContent || '';
+    const price = card.querySelector('.amount')?.textContent || '';
+    const period = card.querySelector('.period')?.textContent || '';
+    html += `<div class="section-item" onclick="this.classList.toggle('open')">
+      <div class="section-item-header"><h4><span style="color:var(--accent);font-family:var(--font-mono,monospace);">0${i+1}</span> ${title}</h4><span class="chevron">▾</span></div>
+      <div class="section-item-body" onclick="event.stopPropagation()">
+        <div class="form-group"><label class="form-label">Title</label><input class="form-input svc-title" data-idx="${i}" value="${title}"></div>
+        <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea svc-desc" data-idx="${i}" rows="2">${desc}</textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Price</label><input class="form-input svc-price" data-idx="${i}" value="${price}"></div>
+          <div class="form-group"><label class="form-label">Period</label><input class="form-input svc-period" data-idx="${i}" value="${period}"></div>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += '<button class="btn btn-primary" style="margin-top:1rem;" onclick="saveServices()">Save All Services</button>';
+  document.getElementById('servicesEditor').innerHTML = html;
+}
+
+async function saveServices() {
+  await updateHTMLAndPush(doc => {
+    const cards = doc.querySelectorAll('.service-card');
+    cards.forEach((card, i) => {
+      const titleInput = document.querySelector(`.svc-title[data-idx="${i}"]`);
+      const descInput = document.querySelector(`.svc-desc[data-idx="${i}"]`);
+      const priceInput = document.querySelector(`.svc-price[data-idx="${i}"]`);
+      const periodInput = document.querySelector(`.svc-period[data-idx="${i}"]`);
+      if (titleInput) { const el = card.querySelector('.heading-sm'); if (el) el.textContent = titleInput.value; }
+      if (descInput) { const el = card.querySelector('p'); if (el) el.textContent = descInput.value; }
+      if (priceInput) { const el = card.querySelector('.amount'); if (el) el.textContent = priceInput.value; }
+      if (periodInput) { const el = card.querySelector('.period'); if (el) el.textContent = periodInput.value; }
+    });
+  }, 'Update services');
+}
+
+// ==================== PROJECTS EDITOR ====================
+function loadProjectsEditor() {
+  if (!CONFIG.htmlContent) return;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(CONFIG.htmlContent, 'text/html');
+  const cards = doc.querySelectorAll('.project-card');
+  let html = '';
+  cards.forEach((card, i) => {
+    const cat = card.querySelector('.project-category')?.textContent || '';
+    const title = card.querySelector('.heading-sm')?.textContent || '';
+    const desc = card.querySelector('.project-body > p')?.textContent || '';
+    const result = card.querySelector('.project-result')?.textContent || '';
+    const techs = Array.from(card.querySelectorAll('.project-tech')).map(t => t.textContent).join(', ');
+    html += `<div class="section-item" onclick="this.classList.toggle('open')">
+      <div class="section-item-header"><h4><span style="color:var(--accent-3);">●</span> ${title}</h4><span class="chevron">▾</span></div>
+      <div class="section-item-body" onclick="event.stopPropagation()">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Category</label><input class="form-input proj-cat" data-idx="${i}" value="${cat}"></div>
+          <div class="form-group"><label class="form-label">Title</label><input class="form-input proj-title" data-idx="${i}" value="${title}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea proj-desc" data-idx="${i}" rows="2">${desc}</textarea></div>
+        <div class="form-group"><label class="form-label">Technologies (comma-separated)</label><input class="form-input proj-techs" data-idx="${i}" value="${techs}"></div>
+        <div class="form-group"><label class="form-label">Result Line</label><input class="form-input proj-result" data-idx="${i}" value="${result}"></div>
+      </div>
+    </div>`;
+  });
+  html += '<button class="btn btn-primary" style="margin-top:1rem;" onclick="saveProjects()">Save All Projects</button>';
+  document.getElementById('projectsEditor').innerHTML = html;
+}
+
+async function saveProjects() {
+  await updateHTMLAndPush(doc => {
+    const cards = doc.querySelectorAll('.project-card');
+    cards.forEach((card, i) => {
+      const update = (sel, cls) => { const input = document.querySelector(`.${cls}[data-idx="${i}"]`); const el = card.querySelector(sel); if (input && el) el.textContent = input.value; };
+      update('.project-category', 'proj-cat');
+      update('.heading-sm', 'proj-title');
+      update('.project-body > p', 'proj-desc');
+      update('.project-result', 'proj-result');
+      // Techs
+      const techInput = document.querySelector(`.proj-techs[data-idx="${i}"]`);
+      const techContainer = card.querySelector('.project-techs');
+      if (techInput && techContainer) {
+        techContainer.innerHTML = techInput.value.split(',').map(t => `<span class="project-tech">${t.trim()}</span>`).join('');
+      }
+    });
+  }, 'Update projects');
+}
+
+// ==================== TESTIMONIALS EDITOR ====================
+function loadTestimonialsEditor() {
+  if (!CONFIG.htmlContent) return;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(CONFIG.htmlContent, 'text/html');
+  const cards = doc.querySelectorAll('.testimonial-card');
+  let html = '';
+  cards.forEach((card, i) => {
+    const name = card.querySelector('.testimonial-name')?.textContent || '';
+    const role = card.querySelector('.testimonial-role')?.textContent || '';
+    const text = card.querySelector('.testimonial-text')?.textContent || '';
+    html += `<div class="section-item" onclick="this.classList.toggle('open')">
+      <div class="section-item-header"><h4>${name || 'Testimonial ' + (i+1)}</h4><span class="chevron">▾</span></div>
+      <div class="section-item-body" onclick="event.stopPropagation()">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Name</label><input class="form-input test-name" data-idx="${i}" value="${name}"></div>
+          <div class="form-group"><label class="form-label">Role / Company</label><input class="form-input test-role" data-idx="${i}" value="${role}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Testimonial Text</label><textarea class="form-textarea test-text" data-idx="${i}" rows="3">${text}</textarea></div>
+      </div>
+    </div>`;
+  });
+  html += '<button class="btn btn-primary" style="margin-top:1rem;" onclick="saveTestimonials()">Save All Testimonials</button>';
+  document.getElementById('testimonialsEditor').innerHTML = html;
+}
+
+async function saveTestimonials() {
+  await updateHTMLAndPush(doc => {
+    const cards = doc.querySelectorAll('.testimonial-card');
+    cards.forEach((card, i) => {
+      const nameInput = document.querySelector(`.test-name[data-idx="${i}"]`);
+      const roleInput = document.querySelector(`.test-role[data-idx="${i}"]`);
+      const textInput = document.querySelector(`.test-text[data-idx="${i}"]`);
+      if (nameInput) { const el = card.querySelector('.testimonial-name'); if (el) el.textContent = nameInput.value; }
+      if (roleInput) { const el = card.querySelector('.testimonial-role'); if (el) el.textContent = roleInput.value; }
+      if (textInput) { const el = card.querySelector('.testimonial-text'); if (el) el.textContent = textInput.value; }
+    });
+  }, 'Update testimonials');
+}
+
+// ==================== MEDIA ====================
+async function loadMedia() {
+  const grid = document.getElementById('mediaGrid');
+  grid.innerHTML = '<div class="spinner"></div>';
+  try {
+    const res = await ghFetch(`/repos/${CONFIG.repo}/contents/media`);
+    if (!res.ok) { grid.innerHTML = '<div class="empty-state"><p>No media folder yet. Upload your first file!</p></div>'; return; }
+    const files = await res.json();
+    if (!files.length) { grid.innerHTML = '<div class="empty-state"><p>No media files yet.</p></div>'; return; }
+    let html = '';
+    files.forEach(f => {
+      CONFIG.sha[`media/${f.name}`] = f.sha;
+      const isImage = /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(f.name);
+      const isVideo = /\.(mp4|webm)$/i.test(f.name);
+      const url = `https://mech-consult.github.io/media/${f.name}`;
+      const thumbHTML = isImage
+        ? `<img class="media-thumb" src="${url}" alt="${f.name}" loading="lazy">`
+        : `<div class="media-thumb-placeholder">${isVideo ? '🎬' : '📄'}</div>`;
+      html += `<div class="media-item">
+        ${thumbHTML}
+        <button class="media-delete" onclick="event.stopPropagation();deleteMedia('${f.name}')" title="Delete">✕</button>
+        <div class="media-info">
+          <div class="name" title="${f.name}">${f.name}</div>
+          <div class="size">${(f.size/1024).toFixed(1)} KB · <a href="${url}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:0.6875rem;">Open</a> · <span style="cursor:pointer;color:var(--accent-2);" onclick="copyURL('${url}')">Copy URL</span></div>
+        </div>
+      </div>`;
+    });
+    grid.innerHTML = html;
+  } catch(e) { grid.innerHTML = '<div class="empty-state"><p>Failed to load media.</p></div>'; }
+}
+
+function copyURL(url) {
+  navigator.clipboard.writeText(url);
+  toast('URL copied!', 'success');
+}
+
+async function deleteMedia(name) {
+  if (!confirm(`Delete ${name}?`)) return;
+  const ok = await deleteFile(`media/${name}`);
+  if (ok) { toast('File deleted.', 'success'); loadMedia(); }
+  else toast('Failed to delete.', 'error');
+}
+
+// Upload
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+uploadZone?.addEventListener('click', () => fileInput.click());
+uploadZone?.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone?.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone?.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+fileInput?.addEventListener('change', () => handleFiles(fileInput.files));
+
+async function handleFiles(files) {
+  for (const file of files) {
+    if (file.size > 25 * 1024 * 1024) { toast(`${file.name} is too large (>25MB)`, 'error'); continue; }
+    toast(`Uploading ${file.name}...`, 'info');
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result.split(',')[1];
+      const body = { message: `Upload ${file.name}`, content: base64 };
+      // Check if file exists
+      const existing = await getFile(`media/${file.name}`);
+      if (existing) body.sha = existing.sha;
+      const res = await ghFetch(`/repos/${CONFIG.repo}/contents/media/${file.name}`, {
+        method: 'PUT', body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        CONFIG.sha[`media/${file.name}`] = data.content.sha;
+        toast(`${file.name} uploaded!`, 'success');
+        loadMedia();
+      } else { toast(`Failed to upload ${file.name}`, 'error'); }
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// ==================== PAGES ====================
+async function loadPages() {
+  const tbody = document.getElementById('pagesTable');
+  try {
+    const res = await ghFetch(`/repos/${CONFIG.repo}/contents/`);
+    const files = await res.json();
+    const htmlFiles = files.filter(f => f.name.endsWith('.html'));
+    let html = '';
+    htmlFiles.forEach(f => {
+      CONFIG.sha[f.name] = f.sha;
+      const isMain = f.name === 'index.html';
+      const isAdmin = f.name === 'admin.html';
+      html += `<tr>
+        <td><strong>${f.name}</strong>${isMain ? ' <span class="badge badge-info" style="margin-left:0.5rem;">Home</span>' : ''}${isAdmin ? ' <span class="badge badge-warning" style="margin-left:0.5rem;">Admin</span>' : ''}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:var(--text-3);">/${f.name === 'index.html' ? '' : f.name}</td>
+        <td><span class="badge badge-success">Published</span></td>
+        <td>
+          <a href="https://mech-consult.github.io/${f.name === 'index.html' ? '' : f.name}" target="_blank" class="btn btn-outline btn-sm" style="margin-right:0.5rem;">View</a>
+          ${!isMain && !isAdmin ? `<button class="btn btn-danger btn-sm" onclick="deletePage('${f.name}')">Delete</button>` : ''}
+        </td>
+      </tr>`;
+    });
+    tbody.innerHTML = html;
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="4">Failed to load pages.</td></tr>'; }
+}
+
+function showNewPageModal() {
+  document.getElementById('newPagePanel').style.display = 'block';
+  const template = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PAGE_TITLE — MechConsult</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#050a14; --accent:#38bdf8; --text:#f1f5f9; --text-2:#94a3b8; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; line-height:1.7; }
+    .container { max-width:900px; margin:0 auto; padding:4rem 2rem; }
+    h1 { font-family:'Space Grotesk',sans-serif; font-size:2.5rem; margin-bottom:1rem; }
+    p { color:var(--text-2); margin-bottom:1rem; }
+    a { color:var(--accent); }
+    .back { display:inline-block; margin-bottom:2rem; color:var(--accent); text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back">&larr; Back to Home</a>
+    <h1>PAGE_TITLE</h1>
+    <p>Your content goes here. Edit this page from the admin panel.</p>
+  </div>
+</body>
+</html>`;
+  document.getElementById('newPageContent').value = template;
+}
+
+async function createNewPage() {
+  const title = document.getElementById('newPageTitle').value.trim();
+  let slug = document.getElementById('newPageSlug').value.trim();
+  const content = document.getElementById('newPageContent').value;
+  if (!title || !slug) { toast('Title and file name are required.', 'error'); return; }
+  if (!slug.endsWith('.html')) slug += '.html';
+  const finalContent = content.replace(/PAGE_TITLE/g, title);
+  toast('Creating page...', 'info');
+  const ok = await putFile(slug, finalContent, `Create page: ${title}`);
+  if (ok) {
+    toast(`Page "${title}" created!`, 'success');
+    document.getElementById('newPagePanel').style.display = 'none';
+    loadPages();
+  } else { toast('Failed to create page.', 'error'); }
+}
+
+async function deletePage(name) {
+  if (!confirm(`Delete ${name}? This cannot be undone.`)) return;
+  const ok = await deleteFile(name);
+  if (ok) { toast('Page deleted.', 'success'); loadPages(); }
+  else toast('Failed to delete page.', 'error');
+}
+
+// ==================== PUBLISH ====================
+async function publishChanges() {
+  const btn = document.getElementById('publishBtn');
+  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;"></span> Publishing...';
+  btn.disabled = true;
+
+  // Trigger Pages rebuild
+  try {
+    await ghFetch(`/repos/${CONFIG.repo}/pages/builds`, { method: 'POST' });
+    toast('Site rebuild triggered! Changes will be live in ~30 seconds.', 'success');
+  } catch(e) { toast('Publish triggered (auto-deploy active).', 'info'); }
+
+  setTimeout(() => {
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg> Publish`;
+    btn.disabled = false;
+    document.getElementById('previewFrame').src = document.getElementById('previewFrame').src;
+  }, 2000);
+}
+
+// ==================== PLACEHOLDER ACTIONS ====================
+function addServiceForm() { toast('To add a service, edit the HTML directly in the Pages section or contact the developer.', 'info'); }
+function addProjectForm() { toast('To add a project, edit the HTML directly in the Pages section or contact the developer.', 'info'); }
+function addTestimonialForm() { toast('To add a testimonial, edit the HTML directly in the Pages section or contact the developer.', 'info'); }
+</script>
+
+</body>
+</html>
