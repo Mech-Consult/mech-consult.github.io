@@ -1,38 +1,16 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { BLOG_POSTS } from '@/lib/static-data'
+import BlogPostContent from './BlogPostContent'
 
-interface BlogPost {
-  title: string
-  slug: string
-  excerpt: string
-  content: string
-  category: string
-  tags: string[]
-  author?: { name: string }
-  createdAt: string
-  updatedAt: string
+export function generateStaticParams() {
+  return BLOG_POSTS.map((post) => ({
+    slug: post.slug,
+  }))
 }
 
-export default function BlogPostPage() {
-  const params = useParams()
-  const [post, setPost] = useState<BlogPost | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
+  const post = BLOG_POSTS.find(p => p.slug === params.slug)
 
-  useEffect(() => {
-    async function fetchPost() {
-      const res = await fetch(`/api/blog/${params.slug}`)
-      if (res.ok) setPost(await res.json())
-      setLoading(false)
-    }
-    fetchPost()
-  }, [params.slug])
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent"></div></div>
   if (!post) return (
     <div className="min-h-screen flex items-center justify-center flex-col gap-4">
       <p className="text-gray-400 text-lg">Post not found</p>
@@ -52,18 +30,14 @@ export default function BlogPostPage() {
           </div>
           <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">{post.title}</h1>
           <p className="text-xl text-gray-300">{post.excerpt}</p>
-          {post.author && <p className="text-gray-400 mt-4">By {post.author.name}</p>}
+          <p className="text-gray-400 mt-4">By {post.authorName}</p>
         </div>
       </section>
 
       {/* Content */}
       <section className="py-20 bg-primary">
         <div className="container max-w-4xl">
-          <article className="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-gray-300 prose-a:text-accent prose-strong:text-white prose-code:text-accent prose-code:bg-secondary prose-code:px-1 prose-code:rounded prose-pre:bg-secondary prose-pre:border prose-pre:border-gray-700">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {post.content}
-            </ReactMarkdown>
-          </article>
+          <BlogPostContent content={post.content} />
 
           {/* Tags */}
           <div className="mt-12 pt-8 border-t border-gray-700">
@@ -72,7 +46,7 @@ export default function BlogPostPage() {
               {post.tags.map((tag) => (
                 <Link
                   key={tag}
-                  href={`/blog?tag=${tag}`}
+                  href="/blog"
                   className="text-sm bg-secondary text-gray-300 px-3 py-1 rounded-full hover:bg-accent/20 hover:text-accent transition"
                 >
                   #{tag}

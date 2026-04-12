@@ -1,24 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import TestimonialCard from '@/components/TestimonialCard'
-import type { Testimonial } from '@/types'
+import { TESTIMONIALS, BLOG_POSTS } from '@/lib/static-data'
 
 export default function Home() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
-
-  useEffect(() => {
-    async function fetchTestimonials() {
-      try {
-        const res = await fetch('/api/testimonials')
-        if (res.ok) setTestimonials(await res.json())
-      } catch {
-        // Use fallback data
-      }
-    }
-    fetchTestimonials()
-  }, [])
+  const featuredTestimonials = TESTIMONIALS.filter(t => t.featured)
 
   return (
     <div>
@@ -99,20 +86,18 @@ export default function Home() {
       </section>
 
       {/* Testimonials */}
-      {testimonials.length > 0 && (
-        <section className="py-20 bg-primary">
-          <div className="container">
-            <h2 className="section-title text-center">What Clients Say</h2>
-            <p className="section-subtitle text-center">Trusted by industry leaders worldwide</p>
+      <section className="py-20 bg-primary">
+        <div className="container">
+          <h2 className="section-title text-center">What Clients Say</h2>
+          <p className="section-subtitle text-center">Trusted by industry leaders worldwide</p>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              {testimonials.slice(0, 3).map((testimonial) => (
-                <TestimonialCard key={testimonial.id} testimonial={testimonial} />
-              ))}
-            </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {featuredTestimonials.slice(0, 3).map((testimonial) => (
+              <TestimonialCard key={testimonial.id} testimonial={testimonial} />
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Why Choose Us */}
       <section className="py-20 bg-secondary">
@@ -149,12 +134,8 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { title: 'The Future of Industrial Automation', category: 'Automation', excerpt: 'Exploring the latest trends in industrial automation, from collaborative robots to AI-driven quality control.' },
-              { title: 'Getting Started with ROS2', category: 'Robotics', excerpt: 'A practical guide to Robot Operating System 2 and how it can accelerate your robotics workflow.' },
-              { title: 'Building Reliable IoT Networks', category: 'IoT', excerpt: 'Best practices for designing and deploying industrial IoT sensor networks.' },
-            ].map((post, idx) => (
-              <Link key={idx} href="/blog" className="card group border border-transparent hover:border-accent/30 transition">
+            {BLOG_POSTS.slice(0, 3).map((post) => (
+              <Link key={post.id} href={`/blog/${post.slug}`} className="card group border border-transparent hover:border-accent/30 transition">
                 <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">{post.category}</span>
                 <h3 className="text-lg font-bold text-white mt-3 mb-2 group-hover:text-accent transition">{post.title}</h3>
                 <p className="text-gray-400 text-sm">{post.excerpt}</p>

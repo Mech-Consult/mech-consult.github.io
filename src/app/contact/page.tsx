@@ -6,38 +6,20 @@ export default function Contact() {
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', subject: '', message: '',
   })
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [errorMsg, setErrorMsg] = useState('')
+  const [status, setStatus] = useState<'idle' | 'success'>('idle')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setStatus('loading')
-    setErrorMsg('')
-
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to send message')
-      }
-
-      setStatus('success')
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
-      setTimeout(() => setStatus('idle'), 5000)
-    } catch (error) {
-      setStatus('error')
-      setErrorMsg(error instanceof Error ? error.message : 'Something went wrong')
-    }
+    const { name, email, phone, subject, message } = formData
+    const body = `Name: ${name}%0AEmail: ${email}%0APhone: ${phone || 'N/A'}%0A%0A${message}`
+    window.location.href = `mailto:info@mechconsult.com?subject=${encodeURIComponent(subject)}&body=${body}`
+    setStatus('success')
+    setTimeout(() => setStatus('idle'), 5000)
   }
 
   return (
@@ -55,12 +37,12 @@ export default function Contact() {
         <div className="container">
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             {[
-              { icon: '📧', title: 'Email', value: 'info@mechconsult.com', link: 'mailto:info@mechconsult.com' },
-              { icon: '📱', title: 'Phone', value: '+1 (555) 123-4567', link: 'tel:+15551234567' },
-              { icon: '📍', title: 'Location', value: '123 Tech Street, City, Country', link: '#' },
+              { icon: '&#128231;', title: 'Email', value: 'info@mechconsult.com', link: 'mailto:info@mechconsult.com' },
+              { icon: '&#128241;', title: 'Phone', value: '+1 (555) 123-4567', link: 'tel:+15551234567' },
+              { icon: '&#128205;', title: 'Location', value: '123 Tech Street, City, Country', link: '#' },
             ].map((contact) => (
               <a key={contact.title} href={contact.link} className="card text-center hover:shadow-xl transition cursor-pointer">
-                <div className="text-4xl mb-4">{contact.icon}</div>
+                <div className="text-4xl mb-4" dangerouslySetInnerHTML={{ __html: contact.icon }}></div>
                 <h3 className="text-xl font-bold text-white mb-2">{contact.title}</h3>
                 <p className="text-gray-400">{contact.value}</p>
               </a>
@@ -73,13 +55,7 @@ export default function Contact() {
 
             {status === 'success' && (
               <div className="bg-green-500/20 border border-green-500 text-green-400 px-4 py-3 rounded-lg mb-6">
-                Thank you! Your message has been sent successfully. I&apos;ll get back to you soon.
-              </div>
-            )}
-
-            {status === 'error' && (
-              <div className="bg-red-500/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg mb-6">
-                {errorMsg}
+                Your email client should open shortly. If it doesn&apos;t, please email us directly at info@mechconsult.com
               </div>
             )}
 
@@ -110,8 +86,8 @@ export default function Contact() {
                 <textarea name="message" value={formData.message} onChange={handleChange} required rows={6} className="w-full bg-primary border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-accent transition" placeholder="Tell me about your project..."></textarea>
               </div>
 
-              <button type="submit" disabled={status === 'loading'} className="w-full btn-primary disabled:opacity-50">
-                {status === 'loading' ? 'Sending...' : 'Send Message'}
+              <button type="submit" className="w-full btn-primary">
+                Send Message
               </button>
             </form>
           </div>

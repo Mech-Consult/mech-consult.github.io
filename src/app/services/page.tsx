@@ -1,32 +1,25 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useMemo } from 'react'
 import ServiceCard from '@/components/ServiceCard'
-import type { Service } from '@/types'
+import { SERVICES } from '@/lib/static-data'
 
 export default function Services() {
-  const [services, setServices] = useState<Service[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'default' | 'price-low' | 'price-high'>('default')
 
-  useEffect(() => {
-    async function fetchServices() {
-      const params = new URLSearchParams()
-      if (searchQuery) params.set('search', searchQuery)
+  const filteredServices = useMemo(() => {
+    let result = SERVICES.filter(s => {
+      if (!searchQuery) return true
+      return s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.description.toLowerCase().includes(searchQuery.toLowerCase())
+    })
 
-      const res = await fetch(`/api/services?${params}`)
-      if (res.ok) setServices(await res.json())
-      setLoading(false)
-    }
-    fetchServices()
-  }, [searchQuery])
+    if (sortBy === 'price-low') result = [...result].sort((a, b) => a.price - b.price)
+    if (sortBy === 'price-high') result = [...result].sort((a, b) => b.price - a.price)
 
-  const sortedServices = [...services].sort((a, b) => {
-    if (sortBy === 'price-low') return a.price - b.price
-    if (sortBy === 'price-high') return b.price - a.price
-    return 0
-  })
+    return result
+  }, [searchQuery, sortBy])
 
   return (
     <div>
@@ -45,7 +38,7 @@ export default function Services() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setLoading(true) }}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search services..."
               className="bg-secondary border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-accent transition w-full md:w-64"
             />
@@ -67,14 +60,12 @@ export default function Services() {
         <div className="container">
           <h2 className="section-title text-center mb-4">What I Offer</h2>
           <p className="section-subtitle text-center mb-12">
-            {services.length} service{services.length !== 1 ? 's' : ''} available
+            {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''} available
           </p>
 
-          {loading ? (
-            <div className="flex items-center justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent"></div></div>
-          ) : sortedServices.length > 0 ? (
+          {filteredServices.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {sortedServices.map((service) => (
+              {filteredServices.map((service) => (
                 <ServiceCard key={service.id} service={service} />
               ))}
             </div>

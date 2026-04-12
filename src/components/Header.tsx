@@ -2,11 +2,9 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { useSession, signOut } from 'next-auth/react'
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
-  const { data: session } = useSession()
 
   const navItems = [
     { label: 'Home', href: '/' },
@@ -33,33 +31,13 @@ export default function Header() {
           ))}
         </div>
 
-        {/* Auth Buttons */}
+        {/* CTA Button */}
         <div className="hidden md:flex items-center gap-3">
-          {session ? (
-            <>
-              <Link
-                href={(session.user as any)?.role === 'ADMIN' ? '/admin' : '/portal'}
-                className="text-gray-300 hover:text-accent transition text-sm"
-              >
-                {(session.user as any)?.role === 'ADMIN' ? 'Admin' : 'Portal'}
-              </Link>
-              <button
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="text-gray-400 hover:text-white transition text-sm"
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <Link href="/login" className="text-gray-300 hover:text-accent transition text-sm">
-              Sign In
-            </Link>
-          )}
           <Link
-            href="/services"
+            href="/contact"
             className="bg-accent text-primary px-6 py-2 rounded-lg font-semibold hover:bg-blue-400 transition"
           >
-            Book Now
+            Get in Touch
           </Link>
         </div>
 
@@ -84,30 +62,12 @@ export default function Header() {
             </Link>
           ))}
           <hr className="border-gray-700" />
-          {session ? (
-            <>
-              <Link
-                href={(session.user as any)?.role === 'ADMIN' ? '/admin' : '/portal'}
-                className="block text-gray-300 hover:text-accent transition py-2"
-                onClick={() => setIsOpen(false)}
-              >
-                {(session.user as any)?.role === 'ADMIN' ? 'Admin Panel' : 'My Portal'}
-              </Link>
-              <button onClick={() => signOut({ callbackUrl: '/' })} className="block text-red-400 py-2 w-full text-left">
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <Link href="/login" className="block text-gray-300 hover:text-accent transition py-2" onClick={() => setIsOpen(false)}>
-              Sign In
-            </Link>
-          )}
           <Link
-            href="/services"
+            href="/contact"
             className="block bg-accent text-primary px-4 py-2 rounded-lg font-semibold text-center hover:bg-blue-400 transition"
             onClick={() => setIsOpen(false)}
           >
-            Book Now
+            Get in Touch
           </Link>
         </div>
       )}

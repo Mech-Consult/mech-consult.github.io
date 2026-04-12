@@ -1,32 +1,28 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useMemo } from 'react'
 import ProjectCard from '@/components/ProjectCard'
-import type { Project } from '@/types'
+import { PROJECTS } from '@/lib/static-data'
 
 const categories = ['All', 'Robotics', 'IoT & Automation', 'Unmanned Systems', 'Vision Systems', 'Power Systems', 'IoT & ML']
 
 export default function Projects() {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
 
-  useEffect(() => {
-    async function fetchProjects() {
-      const params = new URLSearchParams()
-      if (activeCategory !== 'All') params.set('category', activeCategory)
-      if (searchQuery) params.set('search', searchQuery)
-
-      const res = await fetch(`/api/projects?${params}`)
-      if (res.ok) setProjects(await res.json())
-      setLoading(false)
-    }
-    fetchProjects()
+  const filteredProjects = useMemo(() => {
+    return PROJECTS.filter(p => {
+      const matchesCategory = activeCategory === 'All' || p.category === activeCategory
+      const matchesSearch = !searchQuery ||
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.technologies.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
+      return matchesCategory && matchesSearch
+    })
   }, [activeCategory, searchQuery])
 
-  const featuredProjects = projects.filter(p => p.featured)
-  const otherProjects = projects.filter(p => !p.featured)
+  const featuredProjects = filteredProjects.filter(p => p.featured)
+  const otherProjects = filteredProjects.filter(p => !p.featured)
 
   return (
     <div>
@@ -46,7 +42,7 @@ export default function Projects() {
               {categories.map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => { setActiveCategory(cat); setLoading(true) }}
+                  onClick={() => setActiveCategory(cat)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                     activeCategory === cat
                       ? 'bg-accent text-primary'
@@ -60,7 +56,7 @@ export default function Projects() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setLoading(true) }}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search projects..."
               className="bg-secondary border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-accent transition w-full md:w-64"
             />
@@ -68,56 +64,48 @@ export default function Projects() {
         </div>
       </section>
 
-      {loading ? (
+      {/* Featured Projects */}
+      {featuredProjects.length > 0 && (
         <section className="py-20 bg-primary">
-          <div className="flex items-center justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent"></div></div>
+          <div className="container">
+            <h2 className="section-title text-center mb-12">Featured Projects</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredProjects.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </div>
+          </div>
         </section>
-      ) : (
-        <>
-          {/* Featured Projects */}
-          {featuredProjects.length > 0 && (
-            <section className="py-20 bg-primary">
-              <div className="container">
-                <h2 className="section-title text-center mb-12">Featured Projects</h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {featuredProjects.map((project) => (
-                    <ProjectCard key={project.id} project={project} />
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
+      )}
 
-          {/* All Projects */}
-          {otherProjects.length > 0 && (
-            <section className="py-20 bg-secondary">
-              <div className="container">
-                <h2 className="section-title text-center mb-4">
-                  {activeCategory === 'All' ? 'All Projects' : activeCategory}
-                </h2>
-                <p className="section-subtitle text-center mb-12">
-                  {projects.length} project{projects.length !== 1 ? 's' : ''} found
-                </p>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {otherProjects.map((project) => (
-                    <ProjectCard key={project.id} project={project} />
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
+      {/* All Projects */}
+      {otherProjects.length > 0 && (
+        <section className="py-20 bg-secondary">
+          <div className="container">
+            <h2 className="section-title text-center mb-4">
+              {activeCategory === 'All' ? 'All Projects' : activeCategory}
+            </h2>
+            <p className="section-subtitle text-center mb-12">
+              {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''} found
+            </p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {otherProjects.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
-          {projects.length === 0 && (
-            <section className="py-20 bg-primary">
-              <div className="container text-center">
-                <p className="text-gray-400 text-lg">No projects found matching your criteria.</p>
-                <button onClick={() => { setActiveCategory('All'); setSearchQuery('') }} className="mt-4 text-accent hover:text-blue-400 transition">
-                  Clear filters
-                </button>
-              </div>
-            </section>
-          )}
-        </>
+      {filteredProjects.length === 0 && (
+        <section className="py-20 bg-primary">
+          <div className="container text-center">
+            <p className="text-gray-400 text-lg">No projects found matching your criteria.</p>
+            <button onClick={() => { setActiveCategory('All'); setSearchQuery('') }} className="mt-4 text-accent hover:text-blue-400 transition">
+              Clear filters
+            </button>
+          </div>
+        </section>
       )}
 
       {/* Project Statistics */}

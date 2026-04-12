@@ -54,8 +54,8 @@ export default function Footer() {
         <div className="border-t border-secondary pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-400">&copy; {currentYear} MechConsult. All rights reserved.</p>
           <div className="flex gap-6 text-gray-400 text-sm">
-            <Link href="/login" className="hover:text-accent transition">Client Login</Link>
-            <Link href="/register" className="hover:text-accent transition">Register</Link>
+            <Link href="/contact" className="hover:text-accent transition">Contact Us</Link>
+            <Link href="/blog" className="hover:text-accent transition">Blog</Link>
           </div>
         </div>
       </div>

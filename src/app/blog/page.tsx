@@ -1,37 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
-
-interface BlogPost {
-  id: string
-  title: string
-  slug: string
-  excerpt: string
-  category: string
-  tags: string[]
-  coverImage?: string
-  author?: { name: string }
-  createdAt: string
-}
+import { BLOG_POSTS } from '@/lib/static-data'
 
 const categories = ['All', 'Automation', 'Robotics', 'IoT', 'Engineering', 'Tutorial']
 
 export default function BlogPage() {
-  const [posts, setPosts] = useState<BlogPost[]>([])
-  const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState('All')
 
-  useEffect(() => {
-    async function fetchPosts() {
-      const params = new URLSearchParams()
-      if (activeCategory !== 'All') params.set('category', activeCategory)
-
-      const res = await fetch(`/api/blog?${params}`)
-      if (res.ok) setPosts(await res.json())
-      setLoading(false)
-    }
-    fetchPosts()
+  const filteredPosts = useMemo(() => {
+    return BLOG_POSTS.filter(p => {
+      if (!p.published) return false
+      if (activeCategory === 'All') return true
+      return p.category === activeCategory
+    })
   }, [activeCategory])
 
   return (
@@ -51,7 +34,7 @@ export default function BlogPage() {
             {categories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => { setActiveCategory(cat); setLoading(true) }}
+                onClick={() => setActiveCategory(cat)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                   activeCategory === cat ? 'bg-accent text-primary' : 'bg-secondary text-gray-400 hover:text-white'
                 }`}
@@ -66,11 +49,9 @@ export default function BlogPage() {
       {/* Blog Grid */}
       <section className="py-20 bg-primary">
         <div className="container">
-          {loading ? (
-            <div className="flex items-center justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent"></div></div>
-          ) : posts.length > 0 ? (
+          {filteredPosts.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {posts.map((post) => (
+              {filteredPosts.map((post) => (
                 <Link key={post.id} href={`/blog/${post.slug}`} className="group">
                   <article className="bg-secondary rounded-xl overflow-hidden hover:shadow-xl transition duration-300 h-full flex flex-col">
                     {post.coverImage && (
@@ -90,7 +71,7 @@ export default function BlogPage() {
                           <span key={tag} className="text-xs bg-primary text-gray-400 px-2 py-0.5 rounded">#{tag}</span>
                         ))}
                       </div>
-                      {post.author && <p className="text-xs text-gray-500 mt-3">By {post.author.name}</p>}
+                      <p className="text-xs text-gray-500 mt-3">By {post.authorName}</p>
                     </div>
                   </article>
                 </Link>
